@@ -186,4 +186,12 @@
     <string name="debug_audio_glitch">Glitch: trim=%1$d drop=%2$d sil=%3$d ur=%4$d xrun=%5$d</string>
     <string name="debug_audio_decode">Decode: %1$s</string>
     <string name="debug_clients">Clients: %1$d</string>
+    <string name="tv_ready_to_mirror">Ready to mirror</string>
+    <string name="tv_server_off">Server off</string>
+    <string name="tv_listening">Listening</string>
+    <string name="tv_no_device">No device connected</string>
+    <string name="tv_pick_this_name">Pick this name on your iPhone, iPad or Mac to send its screen here. Nothing needs to be installed on the sender.</string>
+    <string name="tv_step_control_center">Open Control Center</string>
+    <string name="tv_step_screen_mirroring">Tap Screen Mirroring</string>
+    <string name="tv_step_choose">Choose %1$s</string>
 </resources>

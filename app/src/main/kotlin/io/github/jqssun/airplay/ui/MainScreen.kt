@@ -604,6 +604,13 @@ private fun OverviewContent(
         if (tv) startFocus.requestFocus()
     }
 
+    // A television gets its own 10-foot layout; mirroring still falls
+    // through to the shared one, which owns the PiP and fullscreen controls.
+    if (tv && !mirroringActive) {
+        TvOverviewContent(viewModel, video, startFocus)
+        return
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         // content area
         Box(
