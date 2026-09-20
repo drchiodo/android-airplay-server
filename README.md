@@ -1,70 +1,107 @@
-# AirPlay Receiver for Android
+# DrChiodo Mirroring
 
-[![Stars](https://img.shields.io/github/stars/jqssun/android-airplay-server)](https://github.com/jqssun/android-airplay-server)
-[![GitHub](https://img.shields.io/github/downloads/jqssun/android-airplay-server/total?label=GitHub&logo=GitHub)](https://github.com/jqssun/android-airplay-server/releases)
-[![license](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/jqssun/android-airplay-server/blob/main/LICENSE)
-[![build](https://img.shields.io/github/actions/workflow/status/jqssun/android-airplay-server/apk.yml?label=build)](https://github.com/jqssun/android-airplay-server/actions/workflows/apk.yml)
-[![release](https://img.shields.io/github/v/release/jqssun/android-airplay-server)](https://github.com/jqssun/android-airplay-server/releases)
+[![license](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![build](https://img.shields.io/github/actions/workflow/status/drchiodo/android-airplay-server/apk.yml?label=build)](https://github.com/drchiodo/android-airplay-server/actions/workflows/apk.yml)
 
-A fully featured free and open-source implementation of AirPlay for Android that turns your device into an AirPlay-compatible display and speaker, based on [UxPlay](https://github.com/FDH2/UxPlay). It is the first open-source AirPlay 2 receiver for Android and Android TV, and works with iOS/iPadOS, macOS devices as well as other sender implementations.
+A Fire TV build of [jqssun/android-airplay-server](https://github.com/jqssun/android-airplay-server),
+which wraps the [UxPlay](https://github.com/FDH2/UxPlay) AirPlay server for
+Android. Pick the TV from the Screen Mirroring list on an iPhone, iPad or Mac
+and its screen lands on the television. You install nothing on the sender.
 
-[<img height="48" alt="Get it on Google Play" src="https://jqssun.github.io/images/badges/google-play-store.svg">](https://play.google.com/store/apps/details?id=io.github.jqssun.airplay)
-[<img height="48" alt="Get it on F-Droid" src="https://jqssun.github.io/images/badges/fdroid.svg">](https://f-droid.org/packages/io.github.jqssun.airplay)
-[<img height="48" alt="Get it on GitHub" src="https://jqssun.github.io/images/badges/github.svg">](https://github.com/jqssun/android-airplay-server/releases/latest)
+Upstream targets phones and tablets, and ships on Google Play and F-Droid. Go
+there for the original. This fork exists so the same receiver reads well from
+a sofa, with a remote.
 
-<video loop src='https://github.com/user-attachments/assets/79ed7c0c-0102-43cc-8816-4f00ce6a4199' alt="demo" width="200" style="display: block; margin: auto;"></video>
+## What this fork changes
 
-## Compatibility
+- A 10-foot layout for the idle screen and for settings, built to Amazon's
+  published Fire TV rules: content inside the inner 90% of the screen, no text
+  under 14sp, and focus that inverts the fill so you can find it from three
+  metres away. Settings gains a left rail, so a D-pad reaches any of the five
+  sections in two presses.
+- A fixed dark palette on TV. A Fire TV reports night mode off, so the upstream
+  theme hands a television its light scheme and the app comes out pale lavender.
+- Its own name, icon and launcher banner.
+- Raster launcher icons. Upstream ships the adaptive icon on its own, which
+  Android 7.1 cannot read, so a Fire TV Stick 4K has no icon to draw.
+- Amazon Appstore artwork under [`store-assets/`](store-assets), at the sizes
+  Amazon asks for, safe areas included.
 
-- Android 7.0+, including Android TV
-- AirPlay devices on the same subnet, including iOS/iPadOS, macOS devices, or other sender implementations
+Everything else stays as upstream wrote it, phone layouts included.
 
-## Features
+## Tested on
 
-- Screen mirroring with H.264 and H.265 (HEVC) video decoding
-- Audio streaming with AAC-ELD, AAC-LC and ALAC audio decoding
-- Video playback with support for HLS, downloads, and remote controls
-- Music playback with track information, cover art, and remote controls
-- Support for Android TV with directional pad navigation and seeking controls
-- Support for Picture-in-Picture, automatic resolution and mode switching
-- Optional PIN authentication
-- Video resolution, overscan, and frame rate control
-- Audio latency control and support for software decoder fallback
-- Debug overlay with real-time statistics (FPS, bitrate, codec, resolution, frame count, audio volume, etc.)
-- Android native media session integration with notification controls
+| Device | Model | Fire OS | API | ABI | RAM |
+|---|---|---|---|---|---|
+| Fire TV Stick (3rd gen) | `AFTSSS` | 7.0 | 28 | `armeabi-v7a` | 922 MB |
+| Fire TV Stick 4K | `AFTMM` | 6.0 | 25 | `armeabi-v7a` | 1.3 GB |
+
+Mirroring a 1920x884 iPhone screen to the 3rd gen Stick, `dumpsys SurfaceFlinger
+--latency` counts 126 frames over 2.32 seconds against a 60 Hz panel. That is
+53.9 frames a second, with a median gap of 16.7 ms between them, which is one
+vsync. The app holds 74 MB and uses 53% of one core out of four. The MediaTek
+decoder carries the load.
+
+Glass-to-glass latency: not measured. Frame rate tells you the decoder keeps
+up. It says nothing about the delay between the phone and the screen.
 
 > [!WARNING]
-> DRM content (e.g. from the Apple TV application) is not supported.
+> DRM content arrives black and silent. Netflix, Prime Video, Disney+ and
+> anything else behind FairPlay will mirror as a black rectangle. The sender
+> blocks the capture, so no receiver can do anything about it.
 
-## Implementation
+## Building
 
-This application uses the C-based [UxPlay](https://github.com/FDH2/UxPlay) library to implement the AirPlay/RAOP protocol, with a JNI bridge to the Android application layer. Audio can be decoded via MediaCodec or a software ALAC decoder, while mirroring video is decoded via MediaCodec and rendered to a SurfaceView. HLS sessions are served through a local playlist proxy.
-
-```mermaid
-flowchart LR
-    AppleDevice["Apple Device (Sender)"]
-    UxPlay["UxPlay (C/JNI)<br/>RAOP + mDNS<br/>FairPlay + HLS"]
-    AndroidApp["Android (Receiver)<br/>MediaCodec + AudioTrack<br/>ExoPlayer (HLS)"]
-
-    AppleDevice -- "RAOP / HLS" --> UxPlay
-    UxPlay --> AndroidApp
-```
-
-CMake is used for native C/C++ components under [`app/src/main/cpp`](app/src/main/cpp). Submodules must be initialized before building. 
+The CI builds on `ubuntu-latest`, and so should you. FFmpeg's `configure` is a
+POSIX shell script, and CMake hands it to the OS as an executable. Windows
+refuses it. Use WSL or a Linux box.
 
 ```bash
 git submodule update --init --recursive
 ./gradlew assembleDebug
 ```
 
-Check out the [CI](https://github.com/jqssun/android-airplay-server/blob/main/.github/workflows/apk.yml) for more details on reproducible builds.
+You need JDK 17 or later, the Android SDK, NDK 27.0.12077973 and CMake 3.22.1.
+Gradle 8.11 rejects JDK 25, so pick 21 if you keep several.
+
+To build for one ABI while you iterate:
+
+```bash
+./gradlew assembleDebug -Pandroid.injected.build.abi=armeabi-v7a
+```
+
+That writes the APK to `app/build/intermediates/apk/debug/` rather than
+`outputs/`, and marks it `testOnly`, so install it with `adb install -t`. Drop
+the flag for a build you mean to ship.
+
+## Implementation
+
+The C core of UxPlay handles RAOP, mDNS and FairPlay behind a JNI bridge under
+[`app/src/main/cpp`](app/src/main/cpp). Kotlin owns the rest: MediaCodec
+decodes H.264 and H.265 to a SurfaceView, AAC-ELD, AAC-LC and ALAC to an
+AudioTrack, and ExoPlayer serves HLS sessions.
+
+```mermaid
+flowchart LR
+    AppleDevice["Apple device (sender)"]
+    UxPlay["UxPlay (C/JNI)<br/>RAOP + mDNS<br/>FairPlay + HLS"]
+    AndroidApp["Fire TV (receiver)<br/>MediaCodec + AudioTrack<br/>ExoPlayer (HLS)"]
+
+    AppleDevice -- "RAOP / HLS" --> UxPlay
+    UxPlay --> AndroidApp
+```
 
 ## Credits
 
-- [UxPlay](https://github.com/FDH2/UxPlay) for the AirPlay/RAOP server implementation
+- [jqssun/android-airplay-server](https://github.com/jqssun/android-airplay-server),
+  the upstream this forks
+- [UxPlay](https://github.com/FDH2/UxPlay) for the AirPlay and RAOP server
 - [FFmpeg](https://ffmpeg.org) for the lossless audio decoder
 - [Next Player](https://github.com/anilbeesetti/nextplayer) for the video player
 
+GPLv3, like upstream.
+
 ---
 
-Disclaimer: This project is not affiliated with Apple Inc.
+Not affiliated with Apple Inc. or with Amazon.com, Inc. AirPlay is a trademark
+of Apple Inc. Fire TV is a trademark of Amazon.com, Inc.
