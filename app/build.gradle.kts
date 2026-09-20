@@ -31,10 +31,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.github.jqssun.airplay"
+        applicationId = "it.drchiodo.mirroring"
         minSdk = 24
         targetSdk = 36
-        versionCode = 31
+        versionCode = 32
         versionName = "0.0.31"
 
         externalNativeBuild {
