@@ -23,6 +23,17 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.saveable.rememberSaveable
+import io.github.jqssun.airplay.ui.theme.TvGround
+import io.github.jqssun.airplay.ui.theme.TvText
+import io.github.jqssun.airplay.ui.theme.TvTextDim
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -35,41 +46,10 @@ import kotlin.math.roundToInt
 
 @Composable
 fun SettingsScreen(viewModel: MainViewModel) {
-    val serverName by viewModel.serverName.collectAsState()
-    val h265Enabled by viewModel.h265Enabled.collectAsState()
-    val enforceSdr by viewModel.enforceSdr.collectAsState()
-    val alacEnabled by viewModel.alacEnabled.collectAsState()
-    val aacEnabled by viewModel.aacEnabled.collectAsState()
-    val resolution by viewModel.resolution.collectAsState()
-    val idlePreview by viewModel.idlePreview.collectAsState()
-    val autoFullscreen by viewModel.autoFullscreen.collectAsState()
-    val keepScreenOn by viewModel.keepScreenOn.collectAsState()
-    val advertiseVideo by viewModel.advertiseVideo.collectAsState()
-    val advertiseAudio by viewModel.advertiseAudio.collectAsState()
-    val launchOnConnect by viewModel.launchOnConnect.collectAsState()
-    val maxFps by viewModel.maxFps.collectAsState()
-    val overscanned by viewModel.overscanned.collectAsState()
-    val requirePin by viewModel.requirePin.collectAsState()
-    val allowNewConn by viewModel.allowNewConn.collectAsState()
-    val autoStart by viewModel.autoStart.collectAsState()
-    val bootAutoStart by viewModel.bootAutoStart.collectAsState()
-    val runInBackground by viewModel.runInBackground.collectAsState()
-    val serverPort by viewModel.serverPort.collectAsState()
-    val audioLatencyMs by viewModel.audioLatencyMs.collectAsState()
-    val forceSwAlac by viewModel.forceSwAlac.collectAsState()
-    val debugEnabled by viewModel.debugEnabled.collectAsState()
-    val developerOptions by viewModel.developerOptions.collectAsState()
-    val keyAllowFrameDrop by viewModel.keyAllowFrameDrop.collectAsState()
-    val realtimeDecoderPriority by viewModel.realtimeDecoderPriority.collectAsState()
-    val lowLatency by viewModel.lowLatency.collectAsState()
-    val operatingRate by viewModel.operatingRate.collectAsState()
-    val scheduledOutputBufferRelease by viewModel.scheduledOutputBufferRelease.collectAsState()
-    val benchmarkLog by viewModel.benchmarkLog.collectAsState()
-    val audioAutoBuffer by viewModel.audioAutoBuffer.collectAsState()
-    val audioCushionMs by viewModel.audioCushionMs.collectAsState()
-    val audioAdaptiveStep by viewModel.audioAdaptiveStep.collectAsState()
-    val oboeBufferFrames by viewModel.oboeBufferFrames.collectAsState()
-
+    if (isTv()) {
+        TvSettings(viewModel)
+        return
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,329 +57,474 @@ fun SettingsScreen(viewModel: MainViewModel) {
             .padding(vertical = 8.dp)
     ) {
         SectionHeader(stringResource(R.string.section_server))
-
-        SettingTextField(
-            label = stringResource(R.string.setting_server_name),
-            value = serverName,
-            onCommit = { viewModel.setServerName(it) }
-        )
-
-        SettingTextField(
-            label = stringResource(R.string.setting_server_port),
-            value = serverPort.toString(),
-            onCommit = { viewModel.setServerPort(it.toInt()) },
-            range = 1..65535
-        )
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_boot_auto_start),
-            description = stringResource(R.string.setting_boot_auto_start_desc),
-            checked = bootAutoStart,
-            onCheckedChange = { viewModel.setBootAutoStart(it) }
-        )
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_run_in_background),
-            description = stringResource(R.string.setting_run_in_background_desc),
-            checked = runInBackground,
-            onCheckedChange = { viewModel.setRunInBackground(it) }
-        )
-
+        ServerSettings(viewModel)
         SectionHeader(stringResource(R.string.section_connection))
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_require_pin),
-            description = stringResource(R.string.setting_require_pin_desc),
-            checked = requirePin,
-            onCheckedChange = { viewModel.setRequirePin(it) }
-        )
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_allow_new_conn),
-            description = stringResource(R.string.setting_allow_new_conn_desc),
-            checked = allowNewConn,
-            onCheckedChange = { viewModel.setAllowNewConn(it) }
-        )
-
-        val ctx = LocalContext.current
-        val lifecycleOwner = LocalLifecycleOwner.current
-        var hasOverlayPermission by remember { mutableStateOf(canAutoLaunch(ctx)) }
-        DisposableEffect(lifecycleOwner) {
-            val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) hasOverlayPermission = canAutoLaunch(ctx)
-            }
-            lifecycleOwner.lifecycle.addObserver(observer)
-            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-        }
-        val needsOverlayPermission = launchOnConnect && !hasOverlayPermission
-        ListItem(
-            modifier = Modifier
-                .dpadFocus(RectangleShape)
-                .toggleable(
-                    value = launchOnConnect,
-                    role = Role.Switch,
-                    onValueChange = {
-                        viewModel.setLaunchOnConnect(it)
-                        if (it && !canAutoLaunch(ctx)) ctx.startActivity(_overlayIntent(ctx))
-                    }
-                ),
-            headlineContent = { Text(stringResource(R.string.setting_launch_on_connect)) },
-            supportingContent = {
-                Text(stringResource(
-                    if (needsOverlayPermission) R.string.setting_launch_on_connect_no_permission
-                    else R.string.setting_launch_on_connect_desc
-                ))
-            },
-            trailingContent = {
-                Switch(checked = launchOnConnect, onCheckedChange = null)
-            }
-        )
-
+        ConnectionSettings(viewModel)
         SectionHeader(stringResource(R.string.section_display))
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_auto_fullscreen),
-            description = stringResource(R.string.setting_auto_fullscreen_desc),
-            checked = autoFullscreen,
-            onCheckedChange = { viewModel.setAutoFullscreen(it) }
-        )
-
-        SettingResolution(
-            value = resolution,
-            onValueChange = { viewModel.setResolution(it) }
-        )
-
-        SettingChipField(
-            title = stringResource(R.string.setting_max_fps),
-            description = stringResource(R.string.setting_max_fps_desc),
-            value = maxFps.toString(),
-            presets = listOf("24" to "24", "30" to "30", "60" to "60", "120" to "120"),
-            placeholder = stringResource(R.string.setting_max_fps_placeholder),
-            keyboardType = KeyboardType.Number,
-            onValueChange = { it.toIntOrNull()?.let { v -> viewModel.setMaxFps(v) } }
-        )
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_overscanned),
-            description = stringResource(R.string.setting_overscanned_desc),
-            checked = overscanned,
-            onCheckedChange = { viewModel.setOverscanned(it) }
-        )
-
+        DisplaySettings(viewModel)
         SectionHeader(stringResource(R.string.section_decode))
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_h265),
-            description = stringResource(R.string.setting_h265_desc),
-            checked = h265Enabled,
-            onCheckedChange = { viewModel.setH265Enabled(it) }
-        )
-
-        SettingSwitch(
-            title = stringResource(R.string.setting_sw_alac),
-            description = stringResource(R.string.setting_sw_alac_desc),
-            checked = forceSwAlac,
-            onCheckedChange = { viewModel.setForceSwAlac(it) }
-        )
-
+        DecodeSettings(viewModel)
         SectionHeader(stringResource(R.string.section_developer))
+        DeveloperSettings(viewModel)
+    }
+}
 
-        SettingSwitch(
-            title = stringResource(R.string.setting_developer_options),
-            description = stringResource(R.string.setting_developer_options_desc),
-            checked = developerOptions,
-            onCheckedChange = { viewModel.setDeveloperOptions(it) }
+/**
+ * On a television the same sections become a left rail plus one pane, so a
+ * remote reaches any setting in a few presses instead of scrolling past
+ * thirty of them. The rows themselves are the phone ones, unchanged.
+ */
+@Composable
+private fun TvSettings(viewModel: MainViewModel) {
+    val sections = listOf(
+        R.string.section_server,
+        R.string.section_connection,
+        R.string.section_display,
+        R.string.section_decode,
+        R.string.section_developer,
+    )
+    var selected by rememberSaveable { mutableIntStateOf(0) }
+    val firstRail = remember { FocusRequester() }
+    LaunchedEffect(Unit) { firstRail.requestFocus() }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 48.dp, vertical = 28.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.tab_settings),
+            fontSize = 32.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = TvText,
         )
+        Spacer(Modifier.height(20.dp))
 
-        if (developerOptions) {
-            SettingSwitch(
-                title = stringResource(R.string.setting_auto_start),
-                description = stringResource(R.string.setting_auto_start_desc),
-                checked = autoStart,
-                onCheckedChange = { viewModel.setAutoStart(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_keep_screen_on),
-                description = stringResource(R.string.setting_keep_screen_on_desc),
-                checked = keepScreenOn,
-                onCheckedChange = { viewModel.setKeepScreenOn(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_idle_preview),
-                description = stringResource(R.string.setting_idle_preview_desc),
-                checked = idlePreview,
-                onCheckedChange = { viewModel.setIdlePreview(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_advertise_video),
-                description = stringResource(R.string.setting_advertise_video_desc),
-                checked = advertiseVideo,
-                onCheckedChange = { viewModel.setAdvertiseVideo(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_advertise_audio),
-                description = stringResource(R.string.setting_advertise_audio_desc),
-                checked = advertiseAudio,
-                onCheckedChange = { viewModel.setAdvertiseAudio(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_alac),
-                description = stringResource(R.string.setting_alac_desc),
-                checked = alacEnabled,
-                onCheckedChange = { viewModel.setAlacEnabled(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_aac),
-                description = stringResource(R.string.setting_aac_desc),
-                checked = aacEnabled,
-                onCheckedChange = { viewModel.setAacEnabled(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_key_allow_frame_drop),
-                description = stringResource(R.string.setting_key_allow_frame_drop_desc),
-                checked = keyAllowFrameDrop,
-                onCheckedChange = { viewModel.setKeyAllowFrameDrop(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_enforce_sdr),
-                description = stringResource(R.string.setting_enforce_sdr_desc),
-                checked = enforceSdr,
-                onCheckedChange = { viewModel.setEnforceSdr(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_realtime_decoder_priority),
-                description = stringResource(R.string.setting_realtime_decoder_priority_desc),
-                checked = realtimeDecoderPriority,
-                onCheckedChange = { viewModel.setRealtimeDecoderPriority(it) }
-            )
-
-            SettingChips(
-                title = stringResource(R.string.setting_operating_rate),
-                description = stringResource(R.string.setting_operating_rate_desc),
-                value = operatingRate,
-                options = listOf(
-                    Prefs.AUTO to stringResource(R.string.chip_auto),
-                    Prefs.ON to stringResource(R.string.chip_on),
-                    Prefs.OFF to stringResource(R.string.chip_off),
-                ),
-                onValueChange = { viewModel.setOperatingRate(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_low_latency),
-                description = stringResource(R.string.setting_low_latency_desc),
-                checked = lowLatency,
-                onCheckedChange = { viewModel.setLowLatency(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_scheduled_output_buffer_release),
-                description = stringResource(R.string.setting_scheduled_output_buffer_release_desc),
-                checked = scheduledOutputBufferRelease,
-                onCheckedChange = { viewModel.setScheduledOutputBufferRelease(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_audio_delay),
-                description = stringResource(R.string.setting_audio_delay_desc),
-                checked = audioLatencyMs >= 0,
-                onCheckedChange = { viewModel.setAudioLatencyMs(if (it) 250 else -1) }
-            )
-
-            if (audioLatencyMs >= 0) {
-                var sliderVal by remember(audioLatencyMs) { mutableFloatStateOf(audioLatencyMs.toFloat()) }
-                ListItem(
-                    headlineContent = {
-                        Slider(
-                            value = sliderVal,
-                            onValueChange = { sliderVal = it },
-                            onValueChangeFinished = { viewModel.setAudioLatencyMs(sliderVal.roundToInt()) },
-                            valueRange = 0f..1000f,
-                            steps = 19,
-                            modifier = Modifier.dpadFocus().dpadAdjust(
-                                onLeft = { viewModel.setAudioLatencyMs((audioLatencyMs - 50).coerceIn(0, 1000)) },
-                                onRight = { viewModel.setAudioLatencyMs((audioLatencyMs + 50).coerceIn(0, 1000)) }
-                            )
-                        )
-                    },
-                    trailingContent = { Text(stringResource(R.string.audio_delay_value, sliderVal.roundToInt())) }
-                )
+        Row(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.width(210.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                sections.forEachIndexed { i, res ->
+                    TvRailItem(
+                        label = stringResource(res),
+                        selected = i == selected,
+                        onSelect = { selected = i },
+                        modifier = if (i == 0) Modifier.focusRequester(firstRail) else Modifier,
+                    )
+                }
             }
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_audio_auto_buffer),
-                description = stringResource(R.string.setting_audio_auto_buffer_desc),
-                checked = audioAutoBuffer,
-                onCheckedChange = { viewModel.setAudioAutoBuffer(it) }
-            )
-
-            if (audioAutoBuffer) {
-                val maxStep = Prefs.ADAPTIVE_PERCENTILES.size - 1
-                var stepVal by remember(audioAdaptiveStep) { mutableFloatStateOf(audioAdaptiveStep.toFloat()) }
-                ListItem(
-                    headlineContent = {
-                        Slider(
-                            value = stepVal,
-                            onValueChange = { stepVal = it },
-                            onValueChangeFinished = { viewModel.setAudioAdaptiveStep(stepVal.roundToInt()) },
-                            valueRange = 0f..maxStep.toFloat(),
-                            steps = maxStep - 1,
-                            modifier = Modifier.dpadFocus().dpadAdjust(
-                                onLeft = { viewModel.setAudioAdaptiveStep((audioAdaptiveStep - 1).coerceIn(0, maxStep)) },
-                                onRight = { viewModel.setAudioAdaptiveStep((audioAdaptiveStep + 1).coerceIn(0, maxStep)) }
-                            )
-                        )
-                    },
-                    trailingContent = {
-                        val step = stepVal.roundToInt().coerceIn(0, maxStep)
-                        Text(stringResource(R.string.audio_adaptive_value,
-                            Prefs.ADAPTIVE_PERCENTILES[step],
-                            stringArrayResource(R.array.audio_adaptive_step_names)[step]))
-                    }
-                )
-            } else {
-                SettingTextField(
-                    label = stringResource(R.string.setting_audio_cushion_ms),
-                    value = audioCushionMs.toString(),
-                    onCommit = { viewModel.setAudioCushionMs(it.toInt()) },
-                    description = stringResource(R.string.setting_audio_cushion_ms_desc),
-                    range = 1..1000
-                )
+            Spacer(Modifier.width(32.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                when (selected) {
+                    0 -> ServerSettings(viewModel)
+                    1 -> ConnectionSettings(viewModel)
+                    2 -> DisplaySettings(viewModel)
+                    3 -> DecodeSettings(viewModel)
+                    else -> DeveloperSettings(viewModel)
+                }
             }
-
-            SettingTextField(
-                label = stringResource(R.string.setting_oboe_buffer_frames),
-                value = oboeBufferFrames.toString(),
-                onCommit = { viewModel.setOboeBufferFrames(it.toInt()) },
-                description = stringResource(R.string.setting_oboe_buffer_frames_desc),
-                range = 0..8192
-            )
-
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_debug_overlay),
-                description = stringResource(R.string.setting_debug_overlay_desc),
-                checked = debugEnabled,
-                onCheckedChange = { viewModel.setDebugEnabled(it) }
-            )
-
-            SettingSwitch(
-                title = stringResource(R.string.setting_benchmark_log),
-                description = stringResource(R.string.setting_benchmark_log_desc),
-                checked = benchmarkLog,
-                onCheckedChange = { viewModel.setBenchmarkLog(it) }
-            )
         }
     }
+}
+
+@Composable
+private fun TvRailItem(
+    label: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            // On a remote, moving onto an entry is choosing it; nobody wants
+            // to press select and then navigate back out.
+            .onFocusChanged { if (it.isFocused) onSelect() }
+            .tvFocusFill(shape)
+            .background(if (selected) TvText else androidx.compose.ui.graphics.Color.Transparent, shape)
+            .clickable(onClick = onSelect)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) TvGround else TvTextDim,
+        )
+    }
+}
+
+@Composable
+private fun ServerSettings(viewModel: MainViewModel) {
+    val serverName by viewModel.serverName.collectAsState()
+    val serverPort by viewModel.serverPort.collectAsState()
+    val bootAutoStart by viewModel.bootAutoStart.collectAsState()
+    val runInBackground by viewModel.runInBackground.collectAsState()
+
+    SettingTextField(
+        label = stringResource(R.string.setting_server_name),
+        value = serverName,
+        onCommit = { viewModel.setServerName(it) }
+    )
+
+    SettingTextField(
+        label = stringResource(R.string.setting_server_port),
+        value = serverPort.toString(),
+        onCommit = { viewModel.setServerPort(it.toInt()) },
+        range = 1..65535
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_boot_auto_start),
+        description = stringResource(R.string.setting_boot_auto_start_desc),
+        checked = bootAutoStart,
+        onCheckedChange = { viewModel.setBootAutoStart(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_run_in_background),
+        description = stringResource(R.string.setting_run_in_background_desc),
+        checked = runInBackground,
+        onCheckedChange = { viewModel.setRunInBackground(it) }
+    )
+}
+
+@Composable
+private fun ConnectionSettings(viewModel: MainViewModel) {
+    val requirePin by viewModel.requirePin.collectAsState()
+    val allowNewConn by viewModel.allowNewConn.collectAsState()
+    val launchOnConnect by viewModel.launchOnConnect.collectAsState()
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_require_pin),
+        description = stringResource(R.string.setting_require_pin_desc),
+        checked = requirePin,
+        onCheckedChange = { viewModel.setRequirePin(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_allow_new_conn),
+        description = stringResource(R.string.setting_allow_new_conn_desc),
+        checked = allowNewConn,
+        onCheckedChange = { viewModel.setAllowNewConn(it) }
+    )
+
+    val ctx = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var hasOverlayPermission by remember { mutableStateOf(canAutoLaunch(ctx)) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) hasOverlayPermission = canAutoLaunch(ctx)
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val needsOverlayPermission = launchOnConnect && !hasOverlayPermission
+    ListItem(
+        modifier = Modifier
+            .dpadFocus(RectangleShape)
+            .toggleable(
+                value = launchOnConnect,
+                role = Role.Switch,
+                onValueChange = {
+                    viewModel.setLaunchOnConnect(it)
+                    if (it && !canAutoLaunch(ctx)) ctx.startActivity(_overlayIntent(ctx))
+                }
+            ),
+        headlineContent = { Text(stringResource(R.string.setting_launch_on_connect)) },
+        supportingContent = {
+            Text(stringResource(
+                if (needsOverlayPermission) R.string.setting_launch_on_connect_no_permission
+                else R.string.setting_launch_on_connect_desc
+            ))
+        },
+        trailingContent = {
+            Switch(checked = launchOnConnect, onCheckedChange = null)
+        }
+    )
+}
+
+@Composable
+private fun DisplaySettings(viewModel: MainViewModel) {
+    val autoFullscreen by viewModel.autoFullscreen.collectAsState()
+    val resolution by viewModel.resolution.collectAsState()
+    val maxFps by viewModel.maxFps.collectAsState()
+    val overscanned by viewModel.overscanned.collectAsState()
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_auto_fullscreen),
+        description = stringResource(R.string.setting_auto_fullscreen_desc),
+        checked = autoFullscreen,
+        onCheckedChange = { viewModel.setAutoFullscreen(it) }
+    )
+
+    SettingResolution(
+        value = resolution,
+        onValueChange = { viewModel.setResolution(it) }
+    )
+
+    SettingChipField(
+        title = stringResource(R.string.setting_max_fps),
+        description = stringResource(R.string.setting_max_fps_desc),
+        value = maxFps.toString(),
+        presets = listOf("24" to "24", "30" to "30", "60" to "60", "120" to "120"),
+        placeholder = stringResource(R.string.setting_max_fps_placeholder),
+        keyboardType = KeyboardType.Number,
+        onValueChange = { it.toIntOrNull()?.let { v -> viewModel.setMaxFps(v) } }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_overscanned),
+        description = stringResource(R.string.setting_overscanned_desc),
+        checked = overscanned,
+        onCheckedChange = { viewModel.setOverscanned(it) }
+    )
+}
+
+@Composable
+private fun DecodeSettings(viewModel: MainViewModel) {
+    val h265Enabled by viewModel.h265Enabled.collectAsState()
+    val forceSwAlac by viewModel.forceSwAlac.collectAsState()
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_h265),
+        description = stringResource(R.string.setting_h265_desc),
+        checked = h265Enabled,
+        onCheckedChange = { viewModel.setH265Enabled(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_sw_alac),
+        description = stringResource(R.string.setting_sw_alac_desc),
+        checked = forceSwAlac,
+        onCheckedChange = { viewModel.setForceSwAlac(it) }
+    )
+}
+
+@Composable
+private fun DeveloperSettings(viewModel: MainViewModel) {
+    val developerOptions by viewModel.developerOptions.collectAsState()
+    val autoStart by viewModel.autoStart.collectAsState()
+    val keepScreenOn by viewModel.keepScreenOn.collectAsState()
+    val idlePreview by viewModel.idlePreview.collectAsState()
+    val advertiseVideo by viewModel.advertiseVideo.collectAsState()
+    val advertiseAudio by viewModel.advertiseAudio.collectAsState()
+    val alacEnabled by viewModel.alacEnabled.collectAsState()
+    val aacEnabled by viewModel.aacEnabled.collectAsState()
+    val keyAllowFrameDrop by viewModel.keyAllowFrameDrop.collectAsState()
+    val enforceSdr by viewModel.enforceSdr.collectAsState()
+    val realtimeDecoderPriority by viewModel.realtimeDecoderPriority.collectAsState()
+    val operatingRate by viewModel.operatingRate.collectAsState()
+    val lowLatency by viewModel.lowLatency.collectAsState()
+    val scheduledOutputBufferRelease by viewModel.scheduledOutputBufferRelease.collectAsState()
+    val audioLatencyMs by viewModel.audioLatencyMs.collectAsState()
+    val audioAutoBuffer by viewModel.audioAutoBuffer.collectAsState()
+    val audioCushionMs by viewModel.audioCushionMs.collectAsState()
+    val audioAdaptiveStep by viewModel.audioAdaptiveStep.collectAsState()
+    val oboeBufferFrames by viewModel.oboeBufferFrames.collectAsState()
+    val debugEnabled by viewModel.debugEnabled.collectAsState()
+    val benchmarkLog by viewModel.benchmarkLog.collectAsState()
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_developer_options),
+        description = stringResource(R.string.setting_developer_options_desc),
+        checked = developerOptions,
+        onCheckedChange = { viewModel.setDeveloperOptions(it) }
+    )
+
+    if (!developerOptions) return
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_auto_start),
+        description = stringResource(R.string.setting_auto_start_desc),
+        checked = autoStart,
+        onCheckedChange = { viewModel.setAutoStart(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_keep_screen_on),
+        description = stringResource(R.string.setting_keep_screen_on_desc),
+        checked = keepScreenOn,
+        onCheckedChange = { viewModel.setKeepScreenOn(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_idle_preview),
+        description = stringResource(R.string.setting_idle_preview_desc),
+        checked = idlePreview,
+        onCheckedChange = { viewModel.setIdlePreview(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_advertise_video),
+        description = stringResource(R.string.setting_advertise_video_desc),
+        checked = advertiseVideo,
+        onCheckedChange = { viewModel.setAdvertiseVideo(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_advertise_audio),
+        description = stringResource(R.string.setting_advertise_audio_desc),
+        checked = advertiseAudio,
+        onCheckedChange = { viewModel.setAdvertiseAudio(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_alac),
+        description = stringResource(R.string.setting_alac_desc),
+        checked = alacEnabled,
+        onCheckedChange = { viewModel.setAlacEnabled(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_aac),
+        description = stringResource(R.string.setting_aac_desc),
+        checked = aacEnabled,
+        onCheckedChange = { viewModel.setAacEnabled(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_key_allow_frame_drop),
+        description = stringResource(R.string.setting_key_allow_frame_drop_desc),
+        checked = keyAllowFrameDrop,
+        onCheckedChange = { viewModel.setKeyAllowFrameDrop(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_enforce_sdr),
+        description = stringResource(R.string.setting_enforce_sdr_desc),
+        checked = enforceSdr,
+        onCheckedChange = { viewModel.setEnforceSdr(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_realtime_decoder_priority),
+        description = stringResource(R.string.setting_realtime_decoder_priority_desc),
+        checked = realtimeDecoderPriority,
+        onCheckedChange = { viewModel.setRealtimeDecoderPriority(it) }
+    )
+
+    SettingChips(
+        title = stringResource(R.string.setting_operating_rate),
+        description = stringResource(R.string.setting_operating_rate_desc),
+        value = operatingRate,
+        options = listOf(
+            Prefs.AUTO to stringResource(R.string.chip_auto),
+            Prefs.ON to stringResource(R.string.chip_on),
+            Prefs.OFF to stringResource(R.string.chip_off),
+        ),
+        onValueChange = { viewModel.setOperatingRate(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_low_latency),
+        description = stringResource(R.string.setting_low_latency_desc),
+        checked = lowLatency,
+        onCheckedChange = { viewModel.setLowLatency(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_scheduled_output_buffer_release),
+        description = stringResource(R.string.setting_scheduled_output_buffer_release_desc),
+        checked = scheduledOutputBufferRelease,
+        onCheckedChange = { viewModel.setScheduledOutputBufferRelease(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_audio_delay),
+        description = stringResource(R.string.setting_audio_delay_desc),
+        checked = audioLatencyMs >= 0,
+        onCheckedChange = { viewModel.setAudioLatencyMs(if (it) 250 else -1) }
+    )
+
+    if (audioLatencyMs >= 0) {
+        var sliderVal by remember(audioLatencyMs) { mutableFloatStateOf(audioLatencyMs.toFloat()) }
+        ListItem(
+            headlineContent = {
+                Slider(
+                    value = sliderVal,
+                    onValueChange = { sliderVal = it },
+                    onValueChangeFinished = { viewModel.setAudioLatencyMs(sliderVal.roundToInt()) },
+                    valueRange = 0f..1000f,
+                    steps = 19,
+                    modifier = Modifier.dpadFocus().dpadAdjust(
+                        onLeft = { viewModel.setAudioLatencyMs((audioLatencyMs - 50).coerceIn(0, 1000)) },
+                        onRight = { viewModel.setAudioLatencyMs((audioLatencyMs + 50).coerceIn(0, 1000)) }
+                    )
+                )
+            },
+            trailingContent = { Text(stringResource(R.string.audio_delay_value, sliderVal.roundToInt())) }
+        )
+    }
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_audio_auto_buffer),
+        description = stringResource(R.string.setting_audio_auto_buffer_desc),
+        checked = audioAutoBuffer,
+        onCheckedChange = { viewModel.setAudioAutoBuffer(it) }
+    )
+
+    if (audioAutoBuffer) {
+        val maxStep = Prefs.ADAPTIVE_PERCENTILES.size - 1
+        var stepVal by remember(audioAdaptiveStep) { mutableFloatStateOf(audioAdaptiveStep.toFloat()) }
+        ListItem(
+            headlineContent = {
+                Slider(
+                    value = stepVal,
+                    onValueChange = { stepVal = it },
+                    onValueChangeFinished = { viewModel.setAudioAdaptiveStep(stepVal.roundToInt()) },
+                    valueRange = 0f..maxStep.toFloat(),
+                    steps = maxStep - 1,
+                    modifier = Modifier.dpadFocus().dpadAdjust(
+                        onLeft = { viewModel.setAudioAdaptiveStep((audioAdaptiveStep - 1).coerceIn(0, maxStep)) },
+                        onRight = { viewModel.setAudioAdaptiveStep((audioAdaptiveStep + 1).coerceIn(0, maxStep)) }
+                    )
+                )
+            },
+            trailingContent = {
+                val step = stepVal.roundToInt().coerceIn(0, maxStep)
+                Text(stringResource(R.string.audio_adaptive_value,
+                    Prefs.ADAPTIVE_PERCENTILES[step],
+                    stringArrayResource(R.array.audio_adaptive_step_names)[step]))
+            }
+        )
+    } else {
+        SettingTextField(
+            label = stringResource(R.string.setting_audio_cushion_ms),
+            value = audioCushionMs.toString(),
+            onCommit = { viewModel.setAudioCushionMs(it.toInt()) },
+            description = stringResource(R.string.setting_audio_cushion_ms_desc),
+            range = 1..1000
+        )
+    }
+
+    SettingTextField(
+        label = stringResource(R.string.setting_oboe_buffer_frames),
+        value = oboeBufferFrames.toString(),
+        onCommit = { viewModel.setOboeBufferFrames(it.toInt()) },
+        description = stringResource(R.string.setting_oboe_buffer_frames_desc),
+        range = 0..8192
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_debug_overlay),
+        description = stringResource(R.string.setting_debug_overlay_desc),
+        checked = debugEnabled,
+        onCheckedChange = { viewModel.setDebugEnabled(it) }
+    )
+
+    SettingSwitch(
+        title = stringResource(R.string.setting_benchmark_log),
+        description = stringResource(R.string.setting_benchmark_log_desc),
+        checked = benchmarkLog,
+        onCheckedChange = { viewModel.setBenchmarkLog(it) }
+    )
 }
 
 private fun canAutoLaunch(ctx: Context): Boolean =
