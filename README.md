@@ -95,6 +95,15 @@ flowchart LR
     UxPlay --> AndroidApp
 ```
 
+## Privacy
+
+The app collects nothing and reaches no server of ours, because there is none:
+no accounts, no analytics, no crash reporting, no third-party SDKs. What your
+Apple device sends reaches the television over your own network and stops
+there. The full statement, including what each permission is for and why an
+AirPlay receiver is open to everyone on its network, sits at
+[drchiodo.github.io/android-airplay-server](https://drchiodo.github.io/android-airplay-server/).
+
 ## Credits
 
 - [jqssun/android-airplay-server](https://github.com/jqssun/android-airplay-server),
