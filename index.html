@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — DrChiodo Mirroring</title>
+<meta name="description" content="Privacy policy for DrChiodo Mirroring, an AirPlay receiver for Fire TV.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground: #FBFCFD;
+    --panel: #FFFFFF;
+    --ink: #14202A;
+    --ink-2: #4C5C69;
+    --rule: #DDE4EA;
+    --accent: #1C7FA6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0B1117;
+      --panel: #131C24;
+      --ink: #F2F6F8;
+      --ink-2: #A3B1BE;
+      --rule: #25323D;
+      --accent: #58B4D9;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 56px 80px;
+  }
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 28px; margin-bottom: 36px; }
+  h1 { font-size: clamp(28px, 5vw, 38px); line-height: 1.15; margin: 0 0 10px; text-wrap: balance; }
+  .sub { color: var(--ink-2); margin: 0; }
+  .stamp {
+    display: inline-block; margin-top: 18px; padding: 5px 12px;
+    border: 1px solid var(--rule); border-radius: 999px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 13px; color: var(--ink-2);
+  }
+  h2 {
+    font-size: 20px; margin: 40px 0 12px;
+    padding-top: 22px; border-top: 1px solid var(--rule);
+  }
+  h2:first-of-type { border-top: 0; padding-top: 0; }
+  h3 { font-size: 16px; margin: 24px 0 6px; }
+  p, li { color: var(--ink); }
+  p { margin: 0 0 14px; }
+  ul { margin: 0 0 14px; padding-left: 1.25rem; }
+  li { margin-bottom: 8px; }
+  a { color: var(--accent); }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.9em; background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 1px 5px;
+  }
+  .lead {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin: 0 0 32px;
+  }
+  .lead p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--ink-2); font-weight: 600; }
+  .scroll { overflow-x: auto; }
+  footer {
+    margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--rule);
+    color: var(--ink-2); font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Privacy Policy</h1>
+  <p class="sub">DrChiodo Mirroring, an AirPlay receiver for Fire TV</p>
+  <span class="stamp">Last updated 21 September 2026</span>
+</header>
+
+<div class="lead">
+  <p><strong>The app collects nothing and sends nothing to us.</strong> It has no
+  accounts, no analytics, no crash reporting, no advertising and no third-party
+  SDKs. Nobody operates a server behind it. What your Apple device sends goes to
+  your television over your own network and stops there.</p>
+</div>
+
+<h2>What the app handles, and where it stays</h2>
+
+<div class="scroll">
+<table>
+  <tr><th>Data</th><th>Where it goes</th></tr>
+  <tr>
+    <td>The mirrored screen and audio from your Apple device</td>
+    <td>Received over your local network, decoded and shown on the television.
+    Held in memory for as long as it takes to display, then dropped. The app
+    writes none of it to storage and forwards none of it anywhere.</td>
+  </tr>
+  <tr>
+    <td>The receiver name you choose</td>
+    <td>Stored on the television and announced on your local network over mDNS,
+    so senders can list it. See the warning below.</td>
+  </tr>
+  <tr>
+    <td>Your settings</td>
+    <td>The app's private storage on the television. Removing the app deletes
+    them.</td>
+  </tr>
+  <tr>
+    <td>Diagnostic logs</td>
+    <td>Held in memory and shown on the Logs screen. They record connection
+    events, decoder choices and receiver names. Exporting one writes a file
+    where you tell the system to put it.</td>
+  </tr>
+  <tr>
+    <td>Videos you download</td>
+    <td>Saved to the television's Downloads folder, and only when you ask for
+    a download.</td>
+  </tr>
+</table>
+</div>
+
+<h2>Network</h2>
+
+<p>The app listens on your local network, on port <code>7000</code> by default,
+and answers senders that find it. It opens no connection to any server of ours,
+because there is no server of ours. The one case where it reaches outward is
+video playback: when a sender hands it a media URL, the app fetches that URL,
+which contacts whoever hosts the media.</p>
+
+<h3>Anyone on your network can connect</h3>
+
+<p>An AirPlay receiver is open to the network it sits on. Anyone who can reach
+your television can send a screen to it. Two things limit that: keep the
+receiver on a network you trust, and turn on <strong>Require PIN</strong> in
+Settings, which asks for a four-digit code on every new connection.</p>
+
+<p>The receiver name travels in the clear over mDNS, so everyone on the network
+reads it. Pick a name you would not mind a guest seeing.</p>
+
+<h2>Permissions</h2>
+
+<div class="scroll">
+<table>
+  <tr><th>Permission</th><th>Why</th></tr>
+  <tr><td><code>INTERNET</code>, <code>ACCESS_NETWORK_STATE</code>, <code>ACCESS_WIFI_STATE</code></td>
+      <td>Run the receiver on your network and read its address</td></tr>
+  <tr><td><code>CHANGE_WIFI_MULTICAST_STATE</code></td>
+      <td>Answer the mDNS discovery that lets senders find the television</td></tr>
+  <tr><td><code>FOREGROUND_SERVICE</code> and its media and device variants</td>
+      <td>Keep the receiver running while a session is live</td></tr>
+  <tr><td><code>WAKE_LOCK</code></td>
+      <td>Stop the television sleeping mid-session</td></tr>
+  <tr><td><code>POST_NOTIFICATIONS</code></td>
+      <td>Show that the server is running, and the PIN when one is required</td></tr>
+  <tr><td><code>RECEIVE_BOOT_COMPLETED</code></td>
+      <td>Start the server at boot, if you switch that on</td></tr>
+  <tr><td><code>SYSTEM_ALERT_WINDOW</code></td>
+      <td>Bring the app forward when a device connects, if you switch that on</td></tr>
+</table>
+</div>
+
+<h2>Children</h2>
+
+<p>The app is not directed at children and asks for no personal information
+from anyone.</p>
+
+<h2>Changes</h2>
+
+<p>Any change to this policy appears on this page with a new date at the top.
+The page's history is public in the repository, so you can read what changed.</p>
+
+<h2>Source and contact</h2>
+
+<p>The app is free software under the GPLv3, and the source is public. Read it
+if you would rather check than take the above on trust.</p>
+
+<ul>
+  <li>Source: <a href="https://github.com/drchiodo/android-airplay-server">github.com/drchiodo/android-airplay-server</a></li>
+  <li>Questions and reports: <a href="https://github.com/drchiodo/android-airplay-server/issues">open an issue</a></li>
+</ul>
+
+<footer>
+  <p>DrChiodo Mirroring is a fork of
+  <a href="https://github.com/jqssun/android-airplay-server">jqssun/android-airplay-server</a>,
+  which builds on <a href="https://github.com/FDH2/UxPlay">UxPlay</a>.
+  Not affiliated with Apple Inc. or Amazon.com, Inc. AirPlay is a trademark of
+  Apple Inc. Fire TV is a trademark of Amazon.com, Inc.</p>
+</footer>
+
+</div>
+</body>
+</html>
