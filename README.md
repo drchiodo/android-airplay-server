@@ -42,8 +42,12 @@ Mirroring a 1920x884 iPhone screen to the 3rd gen Stick, `dumpsys SurfaceFlinger
 vsync. The app holds 74 MB and uses 53% of one core out of four. The MediaTek
 decoder carries the load.
 
-Glass-to-glass latency: not measured. Frame rate tells you the decoder keeps
-up. It says nothing about the delay between the phone and the screen.
+Glass-to-glass latency measures 100 ms. A millisecond timer ran on the iPhone,
+mirrored to the Stick, and one photograph caught both screens in the same
+exposure: the phone read 29.560, the television 29.460. That is one sample, so
+read it as an order of magnitude rather than a figure. Frame rate alone would
+not have told you this. It says the decoder keeps up, and nothing about the
+delay between the phone and the screen.
 
 > [!WARNING]
 > DRM content arrives black and silent. Netflix, Prime Video, Disney+ and
